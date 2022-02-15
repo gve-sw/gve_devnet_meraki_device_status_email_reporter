@@ -69,13 +69,26 @@ def downtime():
                 dateTimeDifference = datetime.datetime.now() - device['lastSeen']
                 dateTimeDifferenceInHours = dateTimeDifference.total_seconds() / 60
             entry = {}
-            entry = {
+
+            try:
+                entry = {
                 'date': device['lastSeen'],
                 'serial': device['serial'],
                 'offline': device['lastSeen'],
                 'online': 'Down',
                 'downtime': round(dateTimeDifferenceInHours, 2),
                 'name': device['name'],
+                'switchport': device['switchport']
+            }
+            except:
+                entry = {
+                'date': device['lastSeen'],
+                'serial': device['serial'],
+                'offline': device['lastSeen'],
+                'online': 'Down',
+                'downtime': round(dateTimeDifferenceInHours, 2),
+                'name': device['name'],
+                'switchport': "N/A"
             }
             entries.append(entry)
         if device['downtime']:  # Currently online
@@ -83,13 +96,26 @@ def downtime():
                 dateTimeDifference = instance['to'] - instance['from']
                 dateTimeDifferenceInHours = dateTimeDifference.total_seconds() / 60
                 entry = {}
-                entry = {
+
+                try:
+                    entry = {
                     'date': instance['from'],
                     'serial': device['serial'],
                     'offline': instance['from'],
                     'online': instance['to'],
                     'downtime': round(dateTimeDifferenceInHours, 2),
                     'name': device['name'],
+                    'switchport': device['switchport'],
+                }
+                except:
+                    entry = {
+                    'date': instance['from'],
+                    'serial': device['serial'],
+                    'offline': instance['from'],
+                    'online': instance['to'],
+                    'downtime': round(dateTimeDifferenceInHours, 2),
+                    'name': device['name'],
+                    'switchport': device['switchport'],
                 }
                 entries.append(entry)
 
@@ -142,10 +168,12 @@ if __name__ == "__main__":
     for device in devices:
         temp_link = {}
         downtime_mins = 'N/A'
+        switch_port = 'N/A'
 
         for downtime_device in downtime:
             if downtime_device['serial'] == device["serial"]:
                 downtime_mins = downtime_device['downtime']
+                switch_port = downtime_device['switchport']
 
 
         try:
@@ -154,11 +182,6 @@ if __name__ == "__main__":
         except:
             client_count = "N/A"
 
-        try:
-            resp = dashboard.devices.getDeviceLldpCdp(device["serial"])
-            switch_port = str(resp['ports']['wired0']['lldp']['systemName'].split(" - ")[1]) + "/" + str(resp['ports']['wired0']['lldp']['portId'])
-        except:
-            switch_port = "N/A"
         try:
             date = ""
             date = date + device["lastReportedAt"].split("T")[0] + " "

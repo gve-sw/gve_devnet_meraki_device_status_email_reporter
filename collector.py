@@ -126,6 +126,11 @@ def check_device_status():
                 temp_device['lastSeen'] = datetime.now().replace(second=0, microsecond=0)
                 device_db.insert_one(temp_device)
             elif device_entry['status'] == 'online':
+                try:
+                    resp = dashboard.devices.getDeviceLldpCdp(item['serial'])
+                    switch_port = str(resp['ports']['wired0']['lldp']['systemName'].split(" - ")[1]) + "/" + str(resp['ports']['wired0']['lldp']['portId'])
+                except:
+                    switch_port = "N/A"
                 device_db.update_one(
                     {'_id': device_entry['_id']},
                     {
@@ -133,7 +138,8 @@ def check_device_status():
                             'status': 'offline',
                             'lastSeen': datetime.now().replace(second=0, microsecond=0),
                             'name': item['name'],
-                            'networkId': item['networkId']
+                            'networkId': item['networkId'],
+                            'switchport':switch_port
                         }
                     }
                 )
@@ -158,7 +164,7 @@ def check_device_status():
                         '$set': {
                             'status': 'online',
                             'name': item['name'],
-                            'networkId': item['networkId']
+                            'networkId': item['networkId'],
 
                         },
                         '$unset': {
@@ -173,12 +179,18 @@ def check_device_status():
                     }
                 )
             elif device_entry['status'] == 'online':
+                try:
+                    resp = dashboard.devices.getDeviceLldpCdp(item['serial'])
+                    switch_port = str(resp['ports']['wired0']['lldp']['systemName'].split(" - ")[1]) + "/" + str(resp['ports']['wired0']['lldp']['portId'])
+                except:
+                    switch_port = "N/A"
                 device_db.update_one(
                     {'_id': device_entry['_id']},
                     {
                         '$set': {
                             'name': item['name'],
-                            'networkId': item['networkId']
+                            'networkId': item['networkId'],
+                            'switchport' : switch_port
                         }
                     }
                 )
